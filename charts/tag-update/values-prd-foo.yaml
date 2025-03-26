@@ -2,17 +2,21 @@ cat:
   image:
     tag: 0.0.0
 
+
 dog:
   image:
     tag: 0.0.0
+
 
 fish:
   image:
     tag: 0.0.0
 
+
 octopus:
   image:
     tag: 0.0.0
+
 
 human:
   image:
