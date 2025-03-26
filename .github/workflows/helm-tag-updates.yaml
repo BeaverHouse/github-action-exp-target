@@ -79,7 +79,7 @@ jobs:
 
       - name: Update image tags
         run: |
-          ./scripts/helm-tag-updates.sh \
+          ./.github/scripts/helm-tag-updates.sh \
             --images '${{ github.event.inputs.images }}' \
             --files '${{ github.event.inputs.values_files }}'
 
