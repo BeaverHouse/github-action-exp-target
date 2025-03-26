@@ -103,6 +103,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          commiter: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           commit-message: "chore: update image tags for ${{ github.event.inputs.source_repository }}"
           title: "chore: update image tags for ${{ github.event.inputs.source_repository }}"
           body: |
