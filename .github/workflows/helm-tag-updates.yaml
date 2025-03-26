@@ -77,6 +77,10 @@ jobs:
       - name: Install yq
         uses: mikefarah/yq@master # https://github.com/mikefarah/yq
 
+      - name: Give permission to scripts
+        run: |
+          chmod +x ./.github/scripts/helm-tag-updates.sh
+
       - name: Update image tags
         run: |
           ./.github/scripts/helm-tag-updates.sh \
