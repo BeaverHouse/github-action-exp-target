@@ -138,6 +138,8 @@ jobs:
             fi
           done
 
+          echo $has_staging
+          echo $has_production
           echo "has_staging='$has_staging'" >> $GITHUB_OUTPUT
           echo "has_production='$has_production'" >> $GITHUB_OUTPUT
 
