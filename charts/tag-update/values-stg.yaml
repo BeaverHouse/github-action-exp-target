@@ -1,0 +1,15 @@
+cat:
+  image:
+    tag: 0.0.0
+
+dog:
+  image:
+    tag: 0.0.0
+
+fish:
+  image:
+    tag: 0.0.0
+
+octocat:
+  image:
+    tag: 0.0.0

@@ -1,0 +1,171 @@
+name: Update Image Tags in the Helm Chart
+
+on:
+  workflow_call:
+    inputs:
+      images:
+        description: '업데이트할 이미지 목록 (JSON 형식: [{"name": "이미지1", "tag": "태그1"}])'
+        required: true
+        type: string
+      values_files:
+        description: "업데이트할 values 파일 목록 (쉼표로 구분)"
+        required: true
+        type: string
+      target_branch:
+        description: "업데이트할 브랜치"
+        required: true
+        type: string
+      source_commit:
+        description: "트리거한 커밋"
+        required: true
+        type: string
+      source_repository:
+        description: "트리거한 레포지토리 (owner/repo)"
+        required: true
+        type: string
+      auto_merge:
+        description: "자동 머지 여부 (Staging 환경일 경우만 True로 설정)"
+        required: false
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      images:
+        description: '업데이트할 이미지 목록 (JSON 형식: [{"name": "이미지1", "tag": "태그1"}])'
+        required: true
+        type: string
+      values_files:
+        description: "업데이트할 values 파일 목록 (쉼표로 구분)"
+        required: true
+        type: string
+      target_branch:
+        description: "업데이트할 브랜치"
+        required: true
+        type: string
+      source_commit:
+        description: "트리거한 커밋"
+        required: true
+        type: string
+      source_repository:
+        description: "트리거한 레포지토리 (owner/repo)"
+        required: true
+        type: string
+      auto_merge:
+        description: "자동 머지 여부 (Staging 환경일 경우만 True로 설정)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate timestamp
+        id: timestamp
+        run: echo "value=$(date -u '+%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.inputs.target_branch }}
+
+      - name: Install yq
+        uses: mikefarah/yq@master # https://github.com/mikefarah/yq
+
+      - name: Update image tags
+        run: |
+          ./scripts/helm-tag-updates.sh \
+            --images '${{ github.event.inputs.images }}' \
+            --files '${{ github.event.inputs.values_files }}'
+
+      - name: Set branch name
+        id: branch-name
+        run: |
+          repo="${{ github.event.inputs.source_repository }}"
+          if [ -n "$repo" ]; then
+            echo "value=update-${{ steps.timestamp.outputs.value }}-${{ github.event.inputs.source_commit }}-${repo//\//-}" >> $GITHUB_OUTPUT
+          else
+            echo "에러: source_repository가 제공되지 않았습니다." >&2
+            exit 1
+          fi
+
+      - name: Create Pull Request
+        id: create-pr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update image tags for ${{ github.event.inputs.source_repository }}"
+          title: "chore: update image tags for ${{ github.event.inputs.source_repository }}"
+          body: |
+            다음 이미지들의 태그가 업데이트되었습니다:
+            ```json
+            ${{ github.event.inputs.images }}
+            ```
+
+            업데이트된 파일:
+            ${{ github.event.inputs.values_files }}
+
+            Triggered by: ${{ github.event.sender.login }}
+            Source Repository: ${{ github.event.inputs.source_repository }}
+            Source Commit: ${{ github.event.inputs.source_commit }}
+            Timestamp: ${{ steps.timestamp.outputs.value }}
+          branch: ${{ steps.branch-name.outputs.value }}
+          delete-branch: true
+
+      - name: Check for staging files
+        id: check-staging
+        if: github.event.inputs.auto_merge == 'true'
+        run: |
+          # values_files를 배열로 변환하여 staging 파일이 있고, production 파일이 없는지 확인
+          IFS=',' read -ra FILES <<< "${{ github.event.inputs.values_files }}"
+          for file in "${FILES[@]}"; do
+            if [[ $file == *"stg"* ]]; then
+              echo "has_staging=true" >> $GITHUB_OUTPUT
+              break
+            else 
+              echo "has_staging=false" >> $GITHUB_OUTPUT
+            fi
+            if [[ $file == *"production"* ]]; then
+              echo "has_production=true" >> $GITHUB_OUTPUT
+              break
+            else 
+              echo "has_production=false" >> $GITHUB_OUTPUT
+            fi
+          done
+
+      - name: Enable auto-merge
+        if: |
+          steps.create-pr.outputs.pull-request-number &&
+          github.event.inputs.auto_merge == 'true' &&
+          steps.check-staging.outputs.has_staging == 'true' &&
+          steps.check-staging.outputs.has_production == 'false'
+        run: |
+          # PR이 생성되었을 때만 실행
+          pr_number="${{ steps.create-pr.outputs.pull-request-number }}"
+
+          # Squash merge만 허용하도록 설정
+          if ! gh api \
+            --method PUT \
+            "/repos/${{ github.repository }}/pulls/${pr_number}" \
+            -f merge_method='squash'; then
+            echo "Failed to set merge method to squash"
+            exit 1
+          fi
+
+          # Auto-merge 활성화
+          if ! gh pr merge "$pr_number" \
+            --auto \
+            --squash \
+            --delete-branch; then
+            echo "Failed to enable auto-merge"
+            exit 1
+          fi
+
+          echo "Auto-merge has been enabled for PR #${pr_number}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
