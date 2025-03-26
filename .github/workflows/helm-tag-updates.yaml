@@ -103,7 +103,6 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commiter: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           commit-message: "chore: update image tags for ${{ github.event.inputs.source_repository }}"
           title: "chore: update image tags for ${{ github.event.inputs.source_repository }}"
           body: |
@@ -170,4 +169,4 @@ jobs:
         if: steps.check-staging.outputs.auto_merge_ok == 'true'
         run: gh pr review --approve "${{ steps.create-pr.outputs.pull-request-number }}"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
