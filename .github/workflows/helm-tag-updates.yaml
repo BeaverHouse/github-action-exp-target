@@ -151,14 +151,6 @@ jobs:
           # PR이 생성되었을 때만 실행
           pr_number="${{ steps.create-pr.outputs.pull-request-number }}"
 
-          # Squash merge만 허용하도록 설정
-          if ! gh api \
-            --method PUT \
-            "/repos/${{ github.repository }}/pulls/${pr_number}" \
-            -f merge_method='squash'; then
-            echo "Failed to set merge method to squash"
-            exit 1
-          fi
 
           # Auto-merge 활성화
           if ! gh pr merge "$pr_number" \
