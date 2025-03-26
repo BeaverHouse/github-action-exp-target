@@ -125,11 +125,9 @@ jobs:
         id: check-staging
         if: github.event.inputs.auto_merge == 'true'
         run: |
-          # 초기값 설정
           has_staging=false
           has_production=false
 
-          # values_files를 배열로 변환하여 staging 파일이 있고, production 파일이 없는지 확인
           IFS=',' read -ra FILES <<< "${{ github.event.inputs.values_files }}"
           for file in "${FILES[@]}"; do
             if [[ $file == *"stg"* ]]; then
