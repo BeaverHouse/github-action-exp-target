@@ -173,3 +173,12 @@ jobs:
           echo "Auto-merge has been enabled for PR #${pr_number}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto approve PR
+        if: |
+          steps.create-pr.outputs.pull-request-number &&
+          steps.check-staging.outputs.has_staging == 'true' &&
+          steps.check-staging.outputs.has_production == 'false'
+        run: gh pr review --approve "${{ steps.create-pr.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
