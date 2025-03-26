@@ -125,27 +125,27 @@ jobs:
         id: check-staging
         if: github.event.inputs.auto_merge == 'true'
         run: |
+          # 초기값 설정
+          has_staging=false
+          has_production=false
+
           # values_files를 배열로 변환하여 staging 파일이 있고, production 파일이 없는지 확인
           IFS=',' read -ra FILES <<< "${{ github.event.inputs.values_files }}"
           for file in "${FILES[@]}"; do
             if [[ $file == *"stg"* ]]; then
-              echo "has_staging='true'" >> $GITHUB_OUTPUT
-              break
-            else 
-              echo "has_staging='false'" >> $GITHUB_OUTPUT
+              has_staging=true
             fi
             if [[ $file == *"production"* ]]; then
-              echo "has_production='true'" >> $GITHUB_OUTPUT
-              break
-            else 
-              echo "has_production='false'" >> $GITHUB_OUTPUT
+              has_production=true
             fi
           done
+
+          echo "has_staging='$has_staging'" >> $GITHUB_OUTPUT
+          echo "has_production='$has_production'" >> $GITHUB_OUTPUT
 
       - name: Enable auto-merge
         if: |
           steps.create-pr.outputs.pull-request-number &&
-          github.event.inputs.auto_merge == 'true' &&
           steps.check-staging.outputs.has_staging == 'true' &&
           steps.check-staging.outputs.has_production == 'false'
         run: |
