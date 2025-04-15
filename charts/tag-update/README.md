@@ -9,6 +9,9 @@ I just placed only the `values.yaml` file for now. Imagine that you have a Helm 
 
 It's triggered by the `workflow_dispatch` event, or `workflow_call` event from the source repository.
 
+> [!NOTE]
+> Auto-merge is only available for public repos if you're using free account or organization.
+
 ### Steps
 
 1. Checkout the target repository
