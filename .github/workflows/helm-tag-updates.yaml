@@ -145,6 +145,7 @@ jobs:
           echo $auto_merge_ok
           echo "auto_merge_ok=$auto_merge_ok" >> $GITHUB_OUTPUT
 
+      # https://github.com/peter-evans/enable-pull-request-automerge?tab=readme-ov-file#conditions
       - name: Enable auto-merge
         if: steps.check-staging.outputs.auto_merge_ok == 'true'
         run: |
