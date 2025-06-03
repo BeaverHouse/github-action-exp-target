@@ -169,4 +169,4 @@ jobs:
         if: steps.check-staging.outputs.auto_merge_ok == 'true'
         run: gh pr review --approve "${{ steps.create-pr.outputs.pull-request-number }}"
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GH_PAT_ORGANIZATION }}
