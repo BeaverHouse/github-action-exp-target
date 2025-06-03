@@ -90,9 +90,10 @@ jobs:
       - name: Set branch name
         id: branch-name
         run: |
+          short_sha=${${{ github.event.inputs.source_commit }}:0:8}
           repo="${{ github.event.inputs.source_repository }}"
           if [ -n "$repo" ]; then
-            echo "value=update-${{ steps.timestamp.outputs.value }}-${{ github.event.inputs.source_commit }}-${repo//\//-}" >> $GITHUB_OUTPUT
+            echo "value=update-${{ steps.timestamp.outputs.value }}-${short_sha}-${repo//\//-}" >> $GITHUB_OUTPUT
           else
             echo "에러: source_repository가 제공되지 않았습니다." >&2
             exit 1
