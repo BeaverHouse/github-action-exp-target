@@ -1,14 +1,17 @@
 cat:
   image:
-    tag: 0.0.17
+    tag: 0.0.0
+
 
 dog:
   image:
-    tag: 0.0.48
+    tag: 0.0.0
+
 
 fish:
   image:
-    tag: 1.0.5
+    tag: 0.0.0
+
 
 octocat:
   image:
