@@ -8,8 +8,8 @@ tiger:
 
 cat:
   image:
-    tag: 0.0.0
+    tag: 0.0.17
 
 dog:
   image:
-    tag: 0.0.0
+    tag: 0.0.48
