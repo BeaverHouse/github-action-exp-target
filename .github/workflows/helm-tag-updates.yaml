@@ -90,7 +90,8 @@ jobs:
       - name: Set branch name
         id: branch-name
         run: |
-          short_sha=${${{ github.event.inputs.source_commit }}:0:8}
+          short_sha="${{ github.event.inputs.source_commit }}"
+          short_sha="${short_sha:0:8}"
           repo="${{ github.event.inputs.source_repository }}"
           if [ -n "$repo" ]; then
             echo "value=update-${{ steps.timestamp.outputs.value }}-${short_sha}-${repo//\//-}" >> $GITHUB_OUTPUT
