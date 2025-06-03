@@ -12,7 +12,7 @@ IMAGES=${IMAGES:-"[]"}
 print_usage() {
     echo "Usage: $0 [options]"
     echo "Options:"
-    echo "  -i, --images    JSON 형식의 이미지 목록 '[{\"name\": \"이미지1\", \"tag\": \"태그1\"}]'"
+    echo "  -i, --images    JSON 형식의 이미지 목록 '[{\"name1\": \"tag1\", \"name2\": \"tag2\"}]'"
     echo "  -f, --files     업데이트할 values 파일들 (쉼표로 구분)"
     echo "  -h, --help      도움말 출력"
 }
@@ -53,23 +53,20 @@ for values_file in "${VALUES_FILES_ARRAY[@]}"; do
         continue
     fi
     
-    # Process each image for this file
-    echo "$IMAGES" | jq -c '.[]' | while read -r image; do
-        name=$(echo "$image" | jq -r '.name')
-        tag=$(echo "$image" | jq -r '.tag')
-        
-        if [ -z "$name" ]; then
-            echo "이미지 이름이 없는 항목이 있습니다. 해당 항목을 건너뜁니다."
-            continue
-        fi
+    # Parse images JSON
+    echo "Parsing images JSON..."
+    echo "$IMAGES"
+    for image in $(echo "$IMAGES" | jq -r 'keys[]'); do
+        tag=$(echo "$IMAGES" | jq -r ".[\"$image\"]")
+        echo "Processing image: $image with tag: $tag"
         
         # Check if the component exists
-        if yq -e ".$name" "$values_file" > /dev/null 2>&1; then
-            printf "파일 %s에서 이미지 %s의 태그를 %s로 업데이트합니다.\n" "$values_file" "$name" "$tag"
+        if yq -e ".$image" "$values_file" > /dev/null 2>&1; then
+            printf "파일 %s에서 이미지 %s의 태그를 %s로 업데이트합니다.\n" "$values_file" "$image" "$tag"
             # Update the tag
-            yq --inplace --prettyPrint ".$name.image.tag = \"$tag\"" "$PWD/$values_file"
+            yq --inplace --prettyPrint ".$image.image.tag = \"$tag\"" "$PWD/$values_file"
         else
-            printf "경고: %s 파일에서 %s 컴포넌트를 찾을 수 없습니다.\n" "$values_file" "$name"
+            printf "경고: %s 파일에서 %s 컴포넌트를 찾을 수 없습니다.\n" "$values_file" "$image"
         fi
     done
     
